@@ -5,6 +5,12 @@ const values = {
     "10": 10, "J": 11, "Q": 12, "K": 13, "A": 14
 };
 const playerCount = 4
+const table = {
+    "Hearts": [],
+    "Spades": [],
+    "Diamonds": [],
+    "Clubs": []
+};
 function createDeck() {
     const deck = []
     for (const suit of suits) {
@@ -43,6 +49,25 @@ function dealCard(deck, playerCount) {
     return hands
 
 }
+function findStartingPlayer(hands) {
+    for (let i = 0; i < hands.length; i++) {
+        for (const card of hands[i]) {
+            if (card.suit === "Clubs" && card.rank === "10")
+                return i
+        }
+    }
+}
+
+
+
+
+
+
+
+
+// --- TEST AREA ---
+
+// 1. Make the deck
 const myDeck = createDeck();
 console.log("Original Deck Size:", myDeck.length);
 
@@ -61,3 +86,7 @@ console.log("Player 1 has:", myHands[1].length, "cards");
 // Show Player 0's full hand to verify variety
 console.log("\n--- Player 0's Hand ---");
 console.table(myHands[0]);
+const startingPlayerIndex = findStartingPlayer(myHands);
+
+console.log("\n--- GAME START ---");
+console.log(`Player ${startingPlayerIndex} has the 10 of Clubs and starts!`);
