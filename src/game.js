@@ -36,7 +36,7 @@ function shuffleDeck(deck) {
     }
     return deck;
 }
-function dealCard(deck, playerCount) {
+function dealCards(deck, playerCount) {
     const hands = []
     for (let i = 0; i < playerCount; i++) {
         hands.push([])
@@ -57,36 +57,102 @@ function findStartingPlayer(hands) {
         }
     }
 }
+function playCard(hand, cardToPlay, table) {
+    const index = hand.findIndex(c => c.id === cardToPlay.id)
+    if (index === -1) {
+        return
+    } else {
+        table[cardToPlay.suit].push(cardToPlay)
+        hand.splice(index, 1)
+    }
+}
+function isValidMove(card, table) {
+    if (card.rank === "10") return true;
+
+    const pile = table[card.suit];
+
+    if (pile.length === 0) return false;
+
+    const hasNine = pile.some(c => c.rank === "9");
+    const hasJack = pile.some(c => c.rank === "J");
+
+    if (card.value < 10) {
+        const neighborVal = card.value + 1;
+        const hasNeighbor = pile.some(c => c.value === neighborVal);
+
+        if (!hasNeighbor) return false;
+
+        if (card.rank !== "9") {
+            if (!hasJack) return false;
+        }
+    }
+
+    if (card.value > 10) {
+
+        const neighborVal = card.value - 1;
+        const hasNeighbor = pile.some(c => c.value === neighborVal);
+
+        if (!hasNeighbor) return false;
+
+
+        if (card.rank !== "J") {
+            if (!hasNine) return false;
+        }
+    }
+
+    return true;
+}
+function stealCard(hands, currentPlayerIndex) {
+    const previousPlayerIndex = (currentPlayerIndex - 1 + playerCount) % playerCount
+}
 
 
 
 
 
+const myDeck = shuffleDeck(createDeck());
+const myHands = dealCards(myDeck, 4);
 
+// 2. Create the Table
+const myTable = {
+    "Hearts": [],
+    "Spades": [],
+    "Clubs": [],
+    "Diamonds": []
+};
 
+// 3. Find the Starting Player
+const playerIndex = findStartingPlayer(myHands);
+const startingHand = myHands[playerIndex];
 
-// --- TEST AREA ---
+console.log(`\nPlayer ${playerIndex} starts!`);
+console.log("Cards in hand BEFORE:", startingHand.length); // Should be 13
 
-// 1. Make the deck
-const myDeck = createDeck();
-console.log("Original Deck Size:", myDeck.length);
+// 4. Find the 10 of Clubs object
+const tenOfClubs = startingHand.find(c => c.rank === "10" && c.suit === "Clubs");
 
-// 2. Shuffle it
-shuffleDeck(myDeck);
-console.log("First card after shuffle:", myDeck[0]); // Random check
+// 5. PLAY THE CARD!
+playCard(startingHand, tenOfClubs, myTable);
 
-// 3. Deal to 4 players
-const myHands = dealCard(myDeck, playerCount);
+// 6. Verify the Move
+console.log("Cards in hand AFTER:", startingHand.length); // Should be 12
+console.log("Table (Clubs):", myTable["Clubs"]); // Should contain the 10
 
-// 4. Verify results
-console.log("Total Players:", myHands.length);
-console.log("Player 0 has:", myHands[0].length, "cards");
-console.log("Player 1 has:", myHands[1].length, "cards");
+// ... (Previous simulation code) ...
 
-// Show Player 0's full hand to verify variety
-console.log("\n--- Player 0's Hand ---");
-console.table(myHands[0]);
-const startingPlayerIndex = findStartingPlayer(myHands);
+// We successfully played the 10 of Clubs.
+// Now, let's try to cheat.
 
-console.log("\n--- GAME START ---");
-console.log(`Player ${startingPlayerIndex} has the 10 of Clubs and starts!`);
+console.log("\n--- CHEAT TEST ---");
+
+// create a fake 8 of Clubs
+const fakeEight = { suit: "Clubs", rank: "8", value: 8, id: "Clubs-8" };
+const fakeJack = { suit: "Clubs", rank: "J", value: 11, id: "Clubs-J" };
+
+// Try to play 8 (Should fail because J is missing)
+const canPlayEight = isValidMove(fakeEight, myTable);
+console.log("Can I play 8 of Clubs immediately?", canPlayEight); // Should be FALSE
+
+// Try to play Jack (Should work, because it touches 10)
+const canPlayJack = isValidMove(fakeJack, myTable);
+console.log("Can I play Jack of Clubs immediately?", canPlayJack); // Should be TRUE
