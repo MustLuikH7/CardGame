@@ -4,14 +4,14 @@ const values = {
     "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9,
     "10": 10, "J": 11, "Q": 12, "K": 13, "A": 14
 };
-const playerCount = 4
+export const playerCount = 4
 const table = {
     "Hearts": [],
     "Spades": [],
     "Diamonds": [],
     "Clubs": []
 };
-function createDeck() {
+export function createDeck() {
     const deck = []
     for (const suit of suits) {
         for (const rank of ranks) {
@@ -27,7 +27,7 @@ function createDeck() {
     }
     return deck
 }
-function shuffleDeck(deck) {
+export function shuffleDeck(deck) {
     for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         const temp = deck[i];
@@ -36,7 +36,7 @@ function shuffleDeck(deck) {
     }
     return deck;
 }
-function dealCards(deck, playerCount) {
+export function dealCards(deck, playerCount) {
     const hands = []
     for (let i = 0; i < playerCount; i++) {
         hands.push([])
@@ -49,7 +49,7 @@ function dealCards(deck, playerCount) {
     return hands
 
 }
-function findStartingPlayer(hands) {
+export function findStartingPlayer(hands) {
     for (let i = 0; i < hands.length; i++) {
         for (const card of hands[i]) {
             if (card.suit === "Clubs" && card.rank === "10")
@@ -57,7 +57,7 @@ function findStartingPlayer(hands) {
         }
     }
 }
-function playCard(hand, cardToPlay, table) {
+export function playCard(hand, cardToPlay, table) {
     const index = hand.findIndex(c => c.id === cardToPlay.id)
     if (index === -1) {
         return
@@ -66,7 +66,7 @@ function playCard(hand, cardToPlay, table) {
         hand.splice(index, 1)
     }
 }
-function isValidMove(card, table) {
+export function isValidMove(card, table) {
     if (card.rank === "10") return true;
 
     const pile = table[card.suit];
@@ -102,57 +102,35 @@ function isValidMove(card, table) {
 
     return true;
 }
-function stealCard(hands, currentPlayerIndex) {
-    const previousPlayerIndex = (currentPlayerIndex - 1 + playerCount) % playerCount
+
+
+export function stealCard(hands, currentPlayerIndex) {
+    const totalPlayers = hands.length;
+    let victimIndex = currentPlayerIndex;
+    let foundVictim = false;
+
+    for (let i = 0; i < totalPlayers - 1; i++) {
+        victimIndex = (victimIndex - 1 + totalPlayers) % totalPlayers;
+
+        if (hands[victimIndex].length > 0) {
+            foundVictim = true;
+            break;
+        }
+    }
+
+    if (!foundVictim) {
+        console.log("No one has cards left to steal!");
+        return;
+    }
+
+    const victimHand = hands[victimIndex];
+    const randomCardIndex = Math.floor(Math.random() * victimHand.length);
+    const stolenCard = victimHand[randomCardIndex];
+
+    victimHand.splice(randomCardIndex, 1);
+    hands[currentPlayerIndex].push(stolenCard);
+
+    console.log(`Player ${currentPlayerIndex} stole [${stolenCard.id}] from Player ${victimIndex}`);
 }
 
 
-
-
-
-const myDeck = shuffleDeck(createDeck());
-const myHands = dealCards(myDeck, 4);
-
-// 2. Create the Table
-const myTable = {
-    "Hearts": [],
-    "Spades": [],
-    "Clubs": [],
-    "Diamonds": []
-};
-
-// 3. Find the Starting Player
-const playerIndex = findStartingPlayer(myHands);
-const startingHand = myHands[playerIndex];
-
-console.log(`\nPlayer ${playerIndex} starts!`);
-console.log("Cards in hand BEFORE:", startingHand.length); // Should be 13
-
-// 4. Find the 10 of Clubs object
-const tenOfClubs = startingHand.find(c => c.rank === "10" && c.suit === "Clubs");
-
-// 5. PLAY THE CARD!
-playCard(startingHand, tenOfClubs, myTable);
-
-// 6. Verify the Move
-console.log("Cards in hand AFTER:", startingHand.length); // Should be 12
-console.log("Table (Clubs):", myTable["Clubs"]); // Should contain the 10
-
-// ... (Previous simulation code) ...
-
-// We successfully played the 10 of Clubs.
-// Now, let's try to cheat.
-
-console.log("\n--- CHEAT TEST ---");
-
-// create a fake 8 of Clubs
-const fakeEight = { suit: "Clubs", rank: "8", value: 8, id: "Clubs-8" };
-const fakeJack = { suit: "Clubs", rank: "J", value: 11, id: "Clubs-J" };
-
-// Try to play 8 (Should fail because J is missing)
-const canPlayEight = isValidMove(fakeEight, myTable);
-console.log("Can I play 8 of Clubs immediately?", canPlayEight); // Should be FALSE
-
-// Try to play Jack (Should work, because it touches 10)
-const canPlayJack = isValidMove(fakeJack, myTable);
-console.log("Can I play Jack of Clubs immediately?", canPlayJack); // Should be TRUE
